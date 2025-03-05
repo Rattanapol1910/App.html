@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>ระบบคำนวณผลผลิตพืชผักสวนครัว</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #f0f4f8;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 30px auto;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 8px;
+            font-family: 'Prompt', sans-serif;
+        }
+        #calculateBtn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        #calculateBtn:hover {
+            transform: scale(1.02);
+        }
+        #resultContainer {
+            background-color: #f1f8ff;
+            border-left: 5px solid #3498db;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+        .factor-section {
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .factor-section h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 ระบบคำนวณผลผลิตพืชผักสวนครัว</h1>
+        </div>
+        <div class="content">
+            <div class="form-group">
+                <label>เลือกพืชผัก</label>
+                <select id="herbSelect">
+                    <option value="กระเพรา">กระเพรา</option>
+                    <option value="โหระพา">โหระพา</option>
+                    <option value="ตะไคร้">ตะไคร้</option>
+                    <option value="พริก">พริก</option>
+                    <option value="custom">อื่นๆ (กรอกข้อมูลเอง)</option>
+                </select>
+                <input type="text" id="customHerbInput" placeholder="กรอกชื่อพืชผัก" style="display:none;">
+            </div>
+
+            <div class="factor-section">
+                <h2>ปัจจัยแวดล้อมที่มีผลต่อผลผลิต</h2>
+                
+                <div class="form-group">
+                    <label>อุณหภูมิ (°C)</label>
+                    <input type="number" id="temperature" value="35" min="0" max="50" placeholder="กรอกอุณหภูมิ">
+                </div>
+
+                <div class="form-group">
+                    <label>ช่วงเวลาที่มีแดด (ชั่วโมง/วัน)</label>
+                    <input type="number" id="sunlightHours" value="6" min="0" max="12" placeholder="กรอกชั่วโมงแสง">
+                </div>
+
+                <div class="form-group">
+                    <label>ปริมาณปุ๋ย (กรัม/ตร.ม.)</label>
+                    <input type="number" id="fertilizerAmount" value="50" min="0" max="100" placeholder="กรอกปริมาณปุ๋ย">
+                </div>
+
+                <div class="form-group">
+                    <label>ชนิดของดิน</label>
+                    <select id="soilType">
+                        <option value="ดินร่วน">ดินร่วน</option>
+                        <option value="ดินเหนียว">ดินเหนียว</option>
+                        <option value="ดินทราย">ดินทราย</option>
+                        <option value="ดินลูกรัง">ดินลูกรัง</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>ฤดูกาล</label>
+                    <select id="season">
+                        <option value="ฤดูร้อน">ฤดูร้อน</option>
+                        <option value="ฤดูฝน">ฤดูฝน</option>
+                        <option value="ฤดูหนาว">ฤดูหนาว</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>พื้นที่ปลูก (ตารางเมตร)</label>
+                <input type="number" id="landArea" value="10" min="1">
+            </div>
+
+            <button id="calculateBtn">คำนวณผลผลิต</button>
+
+            <div id="resultContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        // Add event listener for herb selection
+        const herbSelect = document.getElementById('herbSelect');
+        const customHerbInput = document.getElementById('customHerbInput');
+
+        herbSelect.addEventListener('change', function() {
+            customHerbInput.style.display = this.value === 'custom' ? 'block' : 'none';
+        });
+
+        const predefinedHerbs = {
+            'กระเพรา': { 
+                averageYieldPerPlant: 500, 
+                spaceRequired: 0.5, 
+                growthDays: 45,
+                pricePerKg: 50,
+                optimalTemperature: 30,
+                optimalSunlight: 6,
+                optimalFertilizer: 50
+            },
+            'โหระพา': { 
+                averageYieldPerPlant: 300, 
+                spaceRequired: 0.3,
+                growthDays: 40,
+                pricePerKg: 60,
+                optimalTemperature: 28,
+                optimalSunlight: 5,
+                optimalFertilizer: 40
+            },
+            'ตะไคร้': { 
+                averageYieldPerPlant: 1000, 
+                spaceRequired: 1,
+                growthDays: 90,
+                pricePerKg: 40,
+                optimalTemperature: 32,
+                optimalSunlight: 7,
+                optimalFertilizer: 60
+            },
+            'พริก': { 
+                averageYieldPerPlant: 400, 
+                spaceRequired: 0.4,
+                growthDays: 75,
+                pricePerKg: 80,
+                optimalTemperature: 29,
+                optimalSunlight: 6,
+                optimalFertilizer: 55
+            }
+        };
+
+        const calculateBtn = document.getElementById('calculateBtn');
+        const resultContainer = document.getElementById('resultContainer');
+
+        calculateBtn.addEventListener('click', function() {
+            // รวบรวมปัจจัยต่างๆ
+            const temperature = parseFloat(document.getElementById('temperature').value);
+            const sunlightHours = parseFloat(document.getElementById('sunlightHours').value);
+            const fertilizerAmount = parseFloat(document.getElementById('fertilizerAmount').value);
+            const soilType = document.getElementById('soilType').value;
+            const season = document.getElementById('season').value;
+            const landArea = parseFloat(document.getElementById('landArea').value);
+            
+            // Check if custom herb is selected
+            let herbName = herbSelect.value === 'custom' 
+                ? customHerbInput.value || 'พืชผักไม่ระบุ'
+                : herbSelect.value;
+
+            // สำหรับพืชที่ไม่ได้กำหนดค่าล่วงหน้า ใช้ค่าเริ่มต้น
+            let herb = predefinedHerbs[herbSelect.value] || {
+                averageYieldPerPlant: 250, 
+                spaceRequired: 0.4, 
+                growthDays: 60,
+                pricePerKg: 70,
+                optimalTemperature: 30,
+                optimalSunlight: 6,
+                optimalFertilizer: 50
+            };
+            
+            // คำนวณปัจจัยแวดล้อม
+            const tempFactor = 1 - Math.abs(temperature - herb.optimalTemperature) / 50;
+            const sunlightFactor = 1 - Math.abs(sunlightHours - herb.optimalSunlight) / 12;
+            const fertilizerFactor = 1 - Math.abs(fertilizerAmount - herb.optimalFertilizer) / 100;
+            
+            // ปัจจัยเพิ่มเติม
+            const soilTypeFactor = {
+                'ดินร่วน': 1,
+                'ดินเหนียว': 0.8,
+                'ดินทราย': 0.7,
+                'ดินลูกรัง': 0.6
+            }[soilType];
+
+            const seasonFactor = {
+                'ฤดูร้อน': 1,
+                'ฤดูฝน': 1.1,
+                'ฤดูหนาว': 0.9
+            }[season];
+
+            // คำนวณผลผลิต
+            const yieldMultiplier = (tempFactor + sunlightFactor + fertilizerFactor) / 3 * soilTypeFactor * seasonFactor;
+            
+            const plantsPerArea = Math.floor(landArea / herb.spaceRequired);
+            const baseYield = plantsPerArea * herb.averageYieldPerPlant / 1000;
+            const adjustedYield = baseYield * yieldMultiplier;
+            
+            const totalYield = adjustedYield.toFixed(2);
+            const potentialIncome = (totalYield * herb.pricePerKg).toFixed(2);
+
+            resultContainer.innerHTML = `
+                <h3 style="color: #2980b9; margin-bottom: 15px;">ผลการคำนวณ: ${herbName}</h3>
+                <div style="background-color: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <p style="font-weight: 600; color: #34495e;">ปัจจัยแวดล้อม:</p>
+                    <ul style="list-style-type: none; padding-left: 0;">
+                        <li>• อุณหภูมิ: ${temperature}°C (ความเหมาะสม: ${(tempFactor*100).toFixed(2)}%)</li>
+                        <li>• ช่วงเวลาที่มีแดด: ${sunlightHours} ชั่วโมง (ความเหมาะสม: ${(sunlightFactor*100).toFixed(2)}%)</li>
+                        <li>• ปริมาณปุ๋ย: ${fertilizerAmount} กรัม (ความเหมาะสม: ${(fertilizerFactor*100).toFixed(2)}%)</li>
+                        <li>• ชนิดดิน: ${soilType} (ปัจจัย: ${(soilTypeFactor*100).toFixed(2)}%)</li>
+                        <li>• ฤดูกาล: ${season} (ปัจจัย: ${(seasonFactor*100).toFixed(2)}%)</li>
+                    </ul>
+                    <p style="margin-top: 15px;">ผลผลิตรวม: ${totalYield} กก./ไร่</p>
+                    <p>รายได้คาดการณ์: ${potentialIncome} บาท</p>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>
